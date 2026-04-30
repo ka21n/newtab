@@ -249,10 +249,10 @@
     // Weather icons (brightened for dark backgrounds)
     // ============================================
     const ICONS = {
-      sunny: `<svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="9" fill="#FFCA28"/><g stroke="#FFCA28" stroke-width="2.6" stroke-linecap="round"><line x1="24" y1="6" x2="24" y2="11"/><line x1="24" y1="37" x2="24" y2="42"/><line x1="6" y1="24" x2="11" y2="24"/><line x1="37" y1="24" x2="42" y2="24"/><line x1="11.3" y1="11.3" x2="14.8" y2="14.8"/><line x1="33.2" y1="33.2" x2="36.7" y2="36.7"/><line x1="11.3" y1="36.7" x2="14.8" y2="33.2"/><line x1="33.2" y1="14.8" x2="36.7" y2="11.3"/></g></svg>`,
-      cloudy: `<svg viewBox="0 0 48 48"><path d="M14 36 a8 8 0 0 1 0 -16 h1 a10 10 0 0 1 19.5 3 a7 7 0 0 1 0.5 13 z" fill="#F5F5F5"/></svg>`,
-      rainy: `<svg viewBox="0 0 48 48"><path d="M14 28 a8 8 0 0 1 0 -16 h1 a10 10 0 0 1 19.5 3 a7 7 0 0 1 0.5 13 z" fill="#B0BEC5"/><g stroke="#4FC3F7" stroke-width="2.6" stroke-linecap="round"><line x1="16" y1="34" x2="13" y2="42"/><line x1="24" y1="34" x2="21" y2="42"/><line x1="32" y1="34" x2="29" y2="42"/></g></svg>`,
-      snowy: `<svg viewBox="0 0 48 48"><path d="M14 28 a8 8 0 0 1 0 -16 h1 a10 10 0 0 1 19.5 3 a7 7 0 0 1 0.5 13 z" fill="#ECEFF1"/><g fill="#E1F5FE" font-size="9" font-family="sans-serif"><text x="11" y="42">❄</text><text x="21" y="42">❄</text><text x="31" y="42">❄</text></g></svg>`
+      sunny: `<circle cx="24" cy="24" r="9" fill="#FFCA28"/><g stroke="#FFCA28" stroke-width="2.6" stroke-linecap="round"><line x1="24" y1="6" x2="24" y2="11"/><line x1="24" y1="37" x2="24" y2="42"/><line x1="6" y1="24" x2="11" y2="24"/><line x1="37" y1="24" x2="42" y2="24"/><line x1="11.3" y1="11.3" x2="14.8" y2="14.8"/><line x1="33.2" y1="33.2" x2="36.7" y2="36.7"/><line x1="11.3" y1="36.7" x2="14.8" y2="33.2"/><line x1="33.2" y1="14.8" x2="36.7" y2="11.3"/></g>`,
+      cloudy: `<path d="M14 36 a8 8 0 0 1 0 -16 h1 a10 10 0 0 1 19.5 3 a7 7 0 0 1 0.5 13 z" fill="#F5F5F5"/>`,
+      rainy: `<path d="M14 28 a8 8 0 0 1 0 -16 h1 a10 10 0 0 1 19.5 3 a7 7 0 0 1 0.5 13 z" fill="#B0BEC5"/><g stroke="#4FC3F7" stroke-width="2.6" stroke-linecap="round"><line x1="16" y1="34" x2="13" y2="42"/><line x1="24" y1="34" x2="21" y2="42"/><line x1="32" y1="34" x2="29" y2="42"/></g>`,
+      snowy: `<path d="M14 28 a8 8 0 0 1 0 -16 h1 a10 10 0 0 1 19.5 3 a7 7 0 0 1 0.5 13 z" fill="#ECEFF1"/><g fill="#E1F5FE" font-size="9" font-family="sans-serif"><text x="11" y="42">❄</text><text x="21" y="42">❄</text><text x="31" y="42">❄</text></g>`
     };
 
     function wmoWeatherType(code) {
@@ -377,7 +377,7 @@
 
         // Weather icon (centered both axes)
         const type = wmoWeatherType(codes[i]);
-        const iconX = cx - iconSize/2 - 28;  // 28pxぶん左に寄せる
+        const iconX = cx - iconSize/2;
         const iconY = yIconTop + (iconH - iconSize)/2;
         cells += `<g transform="translate(${iconX},${iconY}) scale(${iconScale})">${ICONS[type]}</g>`;
 
