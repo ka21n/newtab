@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>新しいタブ</title>
+  <style>
+    /* ==================== Reset & base ==================== */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { height: 100%; overflow: hidden; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI",
+                   "Hiragino Sans", "Hiragino Kaku Gothic ProN",
+                   "Noto Sans JP", "Yu Gothic UI", Meiryo, sans-serif;
+      color: #fff;
+      background-color: #0a1929;
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 0.6s ease-in-out;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: linear-gradient(135deg,
+        rgba(0,0,0,0.25) 0%,
+        rgba(0,0,0,0.15) 40%,
+        rgba(0,0,0,0.50) 100%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ==================== Layout ==================== */
+    .app { position: relative; width: 100vw; height: 100vh; z-index: 1; }
+
+    /* ==================== Glass card style ==================== */
+    .glass {
+      background: rgba(255, 255, 255, 0.10);
+      backdrop-filter: blur(24px) saturate(1.4);
+      -webkit-backdrop-filter: blur(24px) saturate(1.4);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: 18px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.20),
+                  inset 0 1px 0 rgba(255,255,255,0.10);
+    }
+
+    /* ==================== Clock ==================== */
+    .clock {
+      position: absolute;
+      top: 36px;
+      left: 40px;
+      text-shadow: 0 2px 16px rgba(0,0,0,0.35);
+    }
+    .clock .time {
+      font-size: 5rem;
+      font-weight: 200;
+      letter-spacing: -0.04em;
+      line-height: 1;
+      font-variant-numeric: tabular-nums;
+    }
+    .clock .date {
+      margin-top: 10px;
+      font-size: 0.95rem;
+      font-weight: 400;
+      opacity: 0.88;
+      letter-spacing: 0.02em;
+    }
+
+    /* ==================== Search ==================== */
+    .search {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: min(580px, 88vw);
+    }
+    .search form {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px 22px;
+    }
+    .search .g-icon { width: 20px; height: 20px; flex-shrink: 0; }
+    .search input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: #fff;
+      font-size: 1rem;
+      font-family: inherit;
+      caret-color: #fff;
+    }
+    .search input::placeholder { color: rgba(255,255,255,0.55); }
+
+    /* ==================== Weather row (bottom) ==================== */
+    .weather-row {
+      position: absolute;
+      left: 40px;
+      right: 40px;
+      bottom: 36px;
+      display: flex;
+      gap: 16px;
+      align-items: stretch;
+    }
+
+    /* ==================== 3-day card (left) ==================== */
+    .weather-3days {
+      flex-shrink: 0;
+      width: 360px;
+      padding: 16px 18px 18px;
+    }
+    .weather-3days .head {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 12px;
+    }
+    .weather-3days .head .title {
+      font-size: 0.72rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      opacity: 0.7;
+      font-weight: 600;
+    }
+    .weather-3days .head .source {
+      font-size: 0.65rem;
+      opacity: 0.55;
+    }
+    .weather-3days .head .source a { color: inherit; text-decoration: none; }
+    .weather-3days .head .source a:hover { opacity: 1; text-decoration: underline; }
+    .weather-3days .days {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+    .weather-3days .day {
+      text-align: center;
+      padding: 12px 4px 10px;
+      border-radius: 12px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.06);
+    }
+    .weather-3days .day .label {
+      font-size: 0.68rem;
+      opacity: 0.75;
+      margin-bottom: 6px;
+      letter-spacing: 0.04em;
+    }
+    .weather-3days .day .icon {
+      width: 32px;
+      height: 32px;
+      margin: 0 auto 4px;
+    }
+    .weather-3days .day .icon svg { width: 100%; height: 100%; }
+    .weather-3days .day .text {
+      font-size: 0.7rem;
+      line-height: 1.25;
+      min-height: 2.4em;
+      margin-bottom: 6px;
+      opacity: 0.95;
+    }
+    .weather-3days .day .temps {
+      font-size: 0.78rem;
+      font-variant-numeric: tabular-nums;
+    }
+    .weather-3days .day .temps .high { color: #ffab91; font-weight: 600; }
+    .weather-3days .day .temps .low { color: #90caf9; }
+    .weather-3days .day .pop {
+      font-size: 0.65rem;
+      opacity: 0.7;
+      margin-top: 3px;
+    }
+    .weather-3days .day .pop .drop { color: #64b5f6; margin-right: 2px; }
+
+    /* ==================== Hourly card (right, with tabs) ==================== */
+    .weather-hourly {
+      flex: 1;
+      min-width: 0;
+      padding: 16px 18px 14px;
+      display: flex;
+      flex-direction: column;
+    }
+    .weather-hourly .head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .weather-hourly .head .title {
+      font-size: 0.72rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      opacity: 0.7;
+      font-weight: 600;
+    }
+
+    /* Tabs */
+    .tabs {
+      display: flex;
+      gap: 4px;
+      background: rgba(0,0,0,0.20);
+      border-radius: 8px;
+      padding: 3px;
+    }
+    .tab-btn {
+      padding: 5px 12px;
+      font-size: 0.7rem;
+      background: transparent;
+      border: none;
+      color: rgba(255,255,255,0.65);
+      font-family: inherit;
+      cursor: pointer;
+      border-radius: 6px;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+    }
+    .tab-btn:hover { color: #fff; }
+    .tab-btn.active {
+      background: rgba(255,255,255,0.18);
+      color: #fff;
+    }
+
+    /* Tab panes */
+    .tab-pane { display: none; }
+    .tab-pane.active { display: block; }
+
+    /* MSM chart pane */
+    #pane-msm {
+      width: 100%;
+      overflow-x: auto;
+      padding-bottom: 4px;
+    }
+    #pane-msm svg {
+      display: block;
+      min-width: 100%;
+    }
+    .msm-loading, .msm-error {
+      padding: 30px 0;
+      text-align: center;
+      font-size: 0.85rem;
+      opacity: 0.6;
+    }
+
+    /* iframe panes */
+    .iframe-wrap {
+      position: relative;
+      width: 100%;
+      height: 280px;
+      border-radius: 10px;
+      overflow: hidden;
+      background: rgba(0,0,0,0.25);
+    }
+    .iframe-wrap iframe {
+      position: relative;
+      z-index: 2;
+      width: 100%;
+      height: 100%;
+      border: none;
+      background: #fff;
+    }
+    .iframe-status {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 10px;
+      font-size: 0.85rem;
+      opacity: 0.7;
+      text-align: center;
+      padding: 20px;
+      pointer-events: none;
+    }
+    .iframe-status a {
+      color: #90caf9;
+      text-decoration: underline;
+      pointer-events: auto;
+    }
+
+    /* ==================== Photo credit ==================== */
+    .credit {
+      position: absolute;
+      top: 18px;
+      right: 24px;
+      font-size: 0.7rem;
+      opacity: 0.45;
+      letter-spacing: 0.02em;
+    }
+
+    /* ==================== Responsive ==================== */
+    @media (max-width: 1100px) {
+      .weather-row {
+        flex-direction: column;
+        bottom: 16px;
+        left: 16px;
+        right: 16px;
+      }
+      .weather-3days { width: 100%; }
+    }
+    @media (max-width: 600px) {
+      .clock { top: 24px; left: 24px; }
+      .clock .time { font-size: 3.5rem; }
+      .clock .date { font-size: 0.85rem; }
+      .credit { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+
+    <!-- Clock -->
+    <div class="clock">
+      <div class="time" id="time">--:--</div>
+      <div class="date" id="date">　</div>
+    </div>
+
+    <!-- Search -->
+    <div class="search glass">
+      <form action="https://www.google.com/search" method="GET">
+        <svg class="g-icon" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+          <path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303c-1.649 4.657-6.08 8-11.303 8-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 12.955 4 4 12.955 4 24s8.955 20 20 20 20-8.955 20-20c0-1.341-.138-2.65-.389-3.917z"/>
+          <path fill="#FF3D00" d="M6.306 14.691l6.571 4.819C14.655 15.108 18.961 12 24 12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 16.318 4 9.656 8.337 6.306 14.691z"/>
+          <path fill="#4CAF50" d="M24 44c5.166 0 9.86-1.977 13.409-5.192l-6.19-5.238A11.91 11.91 0 0 1 24 36c-5.202 0-9.619-3.317-11.283-7.946l-6.522 5.025C9.505 39.556 16.227 44 24 44z"/>
+          <path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303a12.04 12.04 0 0 1-4.087 5.571l.003-.002 6.19 5.238C36.971 39.205 44 34 44 24c0-1.341-.138-2.65-.389-3.917z"/>
+        </svg>
+        <input type="text" name="q" placeholder="Google で検索" autocomplete="off" autofocus>
+      </form>
+    </div>
+
+    <!-- Weather row -->
+    <div class="weather-row">
+      <!-- 3-day forecast (JMA official) -->
+      <div class="weather-3days glass">
+        <div class="head">
+          <span class="title">大阪府 3日予報</span>
+          <span class="source">
+            <a href="https://www.jma.go.jp/bosai/forecast/#area_type=class20s&amp;area_code=2710000"
+               target="_blank" rel="noopener">気象庁</a>
+          </span>
+        </div>
+        <div class="days" id="days-3">
+          <div style="grid-column:1/-1;text-align:center;padding:18px 8px;font-size:0.8rem;opacity:0.5;">読み込み中…</div>
+        </div>
+      </div>
+
+      <!-- Hourly forecast (East Osaka) with source tabs -->
+      <div class="weather-hourly glass">
+        <div class="head">
+          <span class="title">東大阪市 1時間ごと</span>
+          <div class="tabs" role="tablist">
+            <button class="tab-btn active" data-tab="msm">気象庁モデル</button>
+            <button class="tab-btn" data-tab="tenki">tenki.jp</button>
+            <button class="tab-btn" data-tab="wn">ウェザーニュース</button>
+          </div>
+        </div>
+
+        <div class="tab-pane active" id="pane-msm">
+          <div class="msm-loading">読み込み中…</div>
+        </div>
+
+        <div class="tab-pane" id="pane-tenki">
+          <div class="iframe-wrap">
+            <div class="iframe-status">
+              <span>埋め込みがブロックされている可能性があります</span>
+              <a href="https://tenki.jp/forecast/6/30/6200/27227/1hour.html" target="_blank" rel="noopener">
+                tenki.jp で開く ↗
+              </a>
+            </div>
+            <iframe data-src="https://tenki.jp/forecast/6/30/6200/27227/1hour.html"
+                    sandbox="allow-scripts allow-same-origin allow-popups"
+                    loading="lazy"></iframe>
+          </div>
+        </div>
+
+        <div class="tab-pane" id="pane-wn">
+          <div class="iframe-wrap">
+            <div class="iframe-status">
+              <span>埋め込みがブロックされている可能性があります</span>
+              <a href="https://weathernews.jp/onebox/tenki/osaka/27227/" target="_blank" rel="noopener">
+                ウェザーニュースで開く ↗
+              </a>
+            </div>
+            <iframe data-src="https://weathernews.jp/onebox/tenki/osaka/27227/"
+                    sandbox="allow-scripts allow-same-origin allow-popups"
+                    loading="lazy"></iframe>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Photo credit -->
+    <div class="credit" id="credit">Photo: Unsplash</div>
+  </div>
+
+  <script>
+    'use strict';
+
+    // ============================================
+    // Background photos (Unsplash)
+    // ============================================
+    const PHOTOS = [
+      'photo-1518837695005-2083093ee35b',
+      'photo-1497436072909-60f360e1d4b1',
+      'photo-1506905925346-21bda4d32df4',
+      'photo-1464822759023-fed622ff2c3b',
+      'photo-1483347756197-71ef80e95f73',
+      'photo-1419242902214-272b3f66ee7a',
+      'photo-1507525428034-b723cf961d3e',
+      'photo-1522383225653-ed111181a951',
+      'photo-1448375240586-882707db888b',
+      'photo-1469474968028-56623f02e42e',
+      'photo-1470071459604-3b5ec3a7fe05',
+      'photo-1500534314209-a25ddb2bd429',
+      'photo-1501785888041-af3ef285b470',
+      'photo-1426604966848-d7adac402bff'
+    ];
+    function setBackground() {
+      const id = PHOTOS[Math.floor(Math.random() * PHOTOS.length)];
+      const url = `https://images.unsplash.com/${id}?w=1920&h=1080&fit=crop&q=80&auto=format`;
+      const img = new Image();
+      img.onload = () => { document.body.style.backgroundImage = `url("${url}")`; };
+      img.src = url;
+    }
+
+    // ============================================
+    // Clock
+    // ============================================
+    const DAYS_JP = ['日','月','火','水','木','金','土'];
+    function updateClock() {
+      const now = new Date();
+      const hh = String(now.getHours()).padStart(2,'0');
+      const mm = String(now.getMinutes()).padStart(2,'0');
+      document.getElementById('time').textContent = `${hh}:${mm}`;
+      document.getElementById('date').textContent =
+        `${now.getFullYear()}年${now.getMonth()+1}月${now.getDate()}日 (${DAYS_JP[now.getDay()]})`;
+    }
+
+    // ============================================
+    // Weather icons (shared)
+    // ============================================
+    const ICONS = {
+      sunny: `<svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="9" fill="#FFCA28"/><g stroke="#FFCA28" stroke-width="2.5" stroke-linecap="round"><line x1="24" y1="6" x2="24" y2="11"/><line x1="24" y1="37" x2="24" y2="42"/><line x1="6" y1="24" x2="11" y2="24"/><line x1="37" y1="24" x2="42" y2="24"/><line x1="11.3" y1="11.3" x2="14.8" y2="14.8"/><line x1="33.2" y1="33.2" x2="36.7" y2="36.7"/><line x1="11.3" y1="36.7" x2="14.8" y2="33.2"/><line x1="33.2" y1="14.8" x2="36.7" y2="11.3"/></g></svg>`,
+      cloudy: `<svg viewBox="0 0 48 48"><path d="M14 36 a8 8 0 0 1 0 -16 h1 a10 10 0 0 1 19.5 3 a7 7 0 0 1 0.5 13 z" fill="#E0E0E0" stroke="#9E9E9E" stroke-width="1"/></svg>`,
+      rainy: `<svg viewBox="0 0 48 48"><path d="M14 28 a8 8 0 0 1 0 -16 h1 a10 10 0 0 1 19.5 3 a7 7 0 0 1 0.5 13 z" fill="#90A4AE" stroke="#546E7A" stroke-width="1"/><g stroke="#42A5F5" stroke-width="2.5" stroke-linecap="round"><line x1="16" y1="34" x2="13" y2="42"/><line x1="24" y1="34" x2="21" y2="42"/><line x1="32" y1="34" x2="29" y2="42"/></g></svg>`,
+      snowy: `<svg viewBox="0 0 48 48"><path d="M14 28 a8 8 0 0 1 0 -16 h1 a10 10 0 0 1 19.5 3 a7 7 0 0 1 0.5 13 z" fill="#ECEFF1" stroke="#90A4AE" stroke-width="1"/><g fill="#E1F5FE" font-size="9" font-family="sans-serif"><text x="11" y="42">❄</text><text x="21" y="42">❄</text><text x="31" y="42">❄</text></g></svg>`
+    };
+
+    function jmaWeatherType(code) {
+      const c = String(code || '');
+      if (c.startsWith('1')) return 'sunny';
+      if (c.startsWith('2')) return 'cloudy';
+      if (c.startsWith('3')) return 'rainy';
+      if (c.startsWith('4')) return 'snowy';
+      return 'cloudy';
+    }
+    function wmoWeatherType(code) {
+      const c = Number(code);
+      if (c <= 1) return 'sunny';
+      if (c <= 3) return 'cloudy';
+      if (c >= 45 && c <= 48) return 'cloudy';
+      if (c >= 51 && c <= 67) return 'rainy';
+      if (c >= 80 && c <= 82) return 'rainy';
+      if (c >= 95 && c <= 99) return 'rainy';
+      if (c >= 71 && c <= 77) return 'snowy';
+      if (c >= 85 && c <= 86) return 'snowy';
+      return 'cloudy';
+    }
+
+    // ============================================
+    // 3-day forecast (JMA official forecast.json, 大阪府=270000)
+    // ============================================
+    const AREA_CODE = '270000';
+    const FORECAST_URL = `https://www.jma.go.jp/bosai/forecast/data/forecast/${AREA_CODE}.json`;
+
+    function maxPopForDate(popSeries, popArea, dateStr) {
+      if (!popArea || !popArea.pops) return null;
+      let max = -1;
+      popSeries.timeDefines.forEach((t, i) => {
+        if (new Date(t).toDateString() === dateStr) {
+          const v = popArea.pops[i];
+          if (v !== '' && v != null) {
+            const n = Number(v);
+            if (!isNaN(n) && n > max) max = n;
+          }
+        }
+      });
+      return max >= 0 ? max : null;
+    }
+    function tempsForDate(longTempSeries, longTempArea, dateStr) {
+      if (!longTempArea) return { min: '', max: '' };
+      const idx = longTempSeries.timeDefines.findIndex(
+        t => new Date(t).toDateString() === dateStr
+      );
+      if (idx < 0) return { min: '', max: '' };
+      return {
+        min: (longTempArea.tempsMin && longTempArea.tempsMin[idx]) || '',
+        max: (longTempArea.tempsMax && longTempArea.tempsMax[idx]) || ''
+      };
+    }
+
+    async function load3Day() {
+      const container = document.getElementById('days-3');
+      try {
+        const res = await fetch(FORECAST_URL, { cache: 'no-cache' });
+        const data = await res.json();
+        const shortFc = data[0];
+        const longFc = data[1];
+        const weatherSeries = shortFc.timeSeries[0];
+        const popSeries = shortFc.timeSeries[1];
+        const weatherArea = weatherSeries.areas[0];
+        const longTempSeries = longFc.timeSeries[1];
+        const longTempArea = longTempSeries.areas[0];
+
+        const dayLabels = ['今日','明日','明後日'];
+        const days = [];
+        const n = Math.min(3, weatherSeries.timeDefines.length);
+        for (let i = 0; i < n; i++) {
+          const t = new Date(weatherSeries.timeDefines[i]);
+          const dateStr = t.toDateString();
+          const code = weatherArea.weatherCodes[i];
+          const text = (weatherArea.weathers[i]||'').replace(/\u3000+/g,'').replace(/\s+/g,'');
+          const pop = maxPopForDate(popSeries, popSeries.areas[0], dateStr);
+          const temps = tempsForDate(longTempSeries, longTempArea, dateStr);
+          days.push({
+            label: dayLabels[i] || `${t.getMonth()+1}/${t.getDate()}`,
+            type: jmaWeatherType(code), text, pop,
+            tempMin: temps.min, tempMax: temps.max
+          });
+        }
+        container.innerHTML = days.map(d => `
+          <div class="day">
+            <div class="label">${d.label}</div>
+            <div class="icon">${ICONS[d.type] || ICONS.cloudy}</div>
+            <div class="text">${d.text || '—'}</div>
+            <div class="temps">
+              ${d.tempMax !== '' ? `<span class="high">${d.tempMax}°</span>` : ''}
+              ${d.tempMin !== '' ? ` <span class="low">${d.tempMin}°</span>` : ''}
+            </div>
+            ${d.pop !== null ? `<div class="pop"><span class="drop">☔</span>${d.pop}%</div>` : ''}
+          </div>`).join('');
+      } catch (e) {
+        console.error('3day fetch:', e);
+        container.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:18px;font-size:0.8rem;opacity:0.7;">取得失敗</div>';
+      }
+    }
+
+    // ============================================
+    // Hourly forecast — Open-Meteo JMA MSM
+    //   Higashi-Osaka: 34.6794, 135.6010
+    //   24 hours, 1-hour steps, MSM (5km mesh, 気象庁モデル)
+    // ============================================
+    const HOURLY_URL =
+      'https://api.open-meteo.com/v1/forecast' +
+      '?latitude=34.6794&longitude=135.6010' +
+      '&hourly=temperature_2m,precipitation,weathercode' +
+      '&models=jma_msm' +
+      '&timezone=Asia%2FTokyo' +
+      '&forecast_hours=24';
+
+    async function loadMSM() {
+      const pane = document.getElementById('pane-msm');
+      try {
+        const res = await fetch(HOURLY_URL);
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const data = await res.json();
+        if (!data.hourly) throw new Error('No hourly data');
+
+        const times = data.hourly.time;
+        const temps = data.hourly.temperature_2m;
+        const precs = data.hourly.precipitation;
+        const codes = data.hourly.weathercode;
+
+        // 6h-band pop from JMA forecast.json
+        let pops6h = [];
+        try {
+          const r2 = await fetch(FORECAST_URL, { cache: 'force-cache' });
+          const d2 = await r2.json();
+          const popSeries = d2[0].timeSeries[1];
+          const popArea = popSeries.areas[0];
+          pops6h = popSeries.timeDefines.map((t, i) => ({
+            start: new Date(t),
+            value: popArea.pops[i] === '' ? null : Number(popArea.pops[i])
+          }));
+        } catch(_) {}
+
+        function popAt(date) {
+          for (let i = pops6h.length - 1; i >= 0; i--) {
+            const start = pops6h[i].start;
+            const end = new Date(start.getTime() + 6*3600*1000);
+            if (date >= start && date < end) return pops6h[i].value;
+          }
+          return null;
+        }
+
+        renderHourlyChart(pane, times, temps, precs, codes, popAt);
+      } catch (e) {
+        console.error('MSM fetch:', e);
+        pane.innerHTML = '<div class="msm-error">気象庁モデルデータの取得に失敗しました</div>';
+      }
+    }
+
+    function renderHourlyChart(pane, times, temps, precs, codes, popAt) {
+      const N = Math.min(24, times.length);
+      const cellW = 42;
+      const padL = 32, padR = 10, padT = 4;
+      const totalW = padL + N * cellW + padR;
+      const H = 232;
+
+      const labelTopH = 16;
+      const iconH = 26;
+      const tempBandH = 60;
+      const tempLabelH = 14;
+      const precBarH = 36;
+
+      const yLabelTop = padT + 10;
+      const yIconTop = yLabelTop + labelTopH;
+      const yTempTop = yIconTop + iconH + 4;
+      const yTempBottom = yTempTop + tempBandH;
+      const yTempLabelY = yTempBottom + 11;
+      const yPrecTop = yTempLabelY + 6;
+      const yPrecBottom = yPrecTop + precBarH;
+      const yPopY = yPrecBottom + 12;
+
+      // Temp scale
+      const tMin = Math.min(...temps.slice(0, N));
+      const tMax = Math.max(...temps.slice(0, N));
+      const tPad = Math.max(1, (tMax - tMin) * 0.15);
+      const tLo = Math.floor(tMin - tPad);
+      const tHi = Math.ceil(tMax + tPad);
+      const tRange = Math.max(1, tHi - tLo);
+      const tempY = (v) => yTempBottom - ((v - tLo) / tRange) * tempBandH;
+
+      // Precipitation scale
+      const precMaxObs = Math.max(...precs.slice(0, N), 0);
+      const precCap = precMaxObs < 1 ? 2 : (precMaxObs < 5 ? 5 : Math.min(20, precMaxObs * 1.2));
+      const precH = (v) => Math.min(precBarH, (v / precCap) * precBarH);
+
+      let cells = '';
+      let polylinePts = [];
+
+      for (let i = 0; i < N; i++) {
+        const t = new Date(times[i]);
+        const hh = t.getHours();
+        const cx = padL + i * cellW + cellW / 2;
+
+        // Hour label
+        const hourLabel = hh === 0
+          ? `<text x="${cx}" y="${yLabelTop+9}" text-anchor="middle" fill="#fff" opacity="0.9" font-size="10" font-weight="600">${t.getMonth()+1}/${t.getDate()}</text>`
+          : `<text x="${cx}" y="${yLabelTop+9}" text-anchor="middle" fill="#fff" opacity="0.55" font-size="10">${hh}</text>`;
+        cells += hourLabel;
+
+        // Weather icon
+        const type = wmoWeatherType(codes[i]);
+        cells += `<g transform="translate(${cx-13},${yIconTop}) scale(0.55)">${ICONS[type]}</g>`;
+
+        // Temp dot + label
+        const ty = tempY(temps[i]);
+        cells += `<circle cx="${cx}" cy="${ty}" r="2.5" fill="#ffab91"/>`;
+        polylinePts.push(`${cx},${ty}`);
+        cells += `<text x="${cx}" y="${yTempLabelY}" text-anchor="middle" fill="#ffab91" font-size="9.5" font-variant-numeric="tabular-nums" font-weight="600">${temps[i].toFixed(1)}</text>`;
+
+        // Precipitation bar
+        const ph = precH(precs[i]);
+        if (ph > 0.5) {
+          cells += `<rect x="${cx-9}" y="${yPrecBottom-ph}" width="18" height="${ph}" fill="#42A5F5" opacity="0.85" rx="2"/>`;
+        }
+        if (precs[i] >= 0.1) {
+          cells += `<text x="${cx}" y="${yPrecBottom+11}" text-anchor="middle" fill="#90caf9" font-size="9" font-variant-numeric="tabular-nums">${precs[i].toFixed(1)}</text>`;
+        }
+
+        // Pop label (6h band)
+        const pv = popAt(t);
+        if (pv !== null) {
+          cells += `<text x="${cx}" y="${yPopY}" text-anchor="middle" fill="#64b5f6" font-size="9" font-variant-numeric="tabular-nums" opacity="0.8">${pv}%</text>`;
+        }
+      }
+
+      // Day separators
+      let separators = '';
+      for (let i = 1; i < N; i++) {
+        const t = new Date(times[i]);
+        if (t.getHours() === 0) {
+          const x = padL + i * cellW;
+          separators += `<line x1="${x}" y1="${padT}" x2="${x}" y2="${yPopY+2}" stroke="rgba(255,255,255,0.18)" stroke-dasharray="2,3"/>`;
+        }
+      }
+
+      // Row labels (left side)
+      const rowLabels = `
+        <text x="4" y="${yIconTop+18}" fill="#fff" font-size="8" opacity="0.45">天気</text>
+        <text x="4" y="${yTempLabelY}" fill="#ffab91" font-size="8" opacity="0.6">気温</text>
+        <text x="4" y="${yTempLabelY+9}" fill="#ffab91" font-size="7.5" opacity="0.45">℃</text>
+        <text x="4" y="${yPrecBottom-2}" fill="#90caf9" font-size="8" opacity="0.6">降水</text>
+        <text x="4" y="${yPrecBottom+8}" fill="#90caf9" font-size="7.5" opacity="0.45">mm/h</text>
+        <text x="4" y="${yPopY}" fill="#64b5f6" font-size="8" opacity="0.6">確率%</text>
+      `;
+
+      const note = `<text x="${totalW-padR}" y="${H-4}" text-anchor="end" fill="#fff" opacity="0.35" font-size="8.5">気温・降水量=気象庁MSM(5kmメッシュ、東大阪) / 降水確率=気象庁公式予報(6時間バンド、大阪府)</text>`;
+
+      const svg = `
+        <svg viewBox="0 0 ${totalW} ${H}" xmlns="http://www.w3.org/2000/svg" style="width:${totalW}px;height:${H}px;">
+          ${separators}
+          ${rowLabels}
+          <polyline points="${polylinePts.join(' ')}" fill="none" stroke="#ffab91" stroke-width="1.5" opacity="0.9"/>
+          ${cells}
+          ${note}
+        </svg>`;
+      pane.innerHTML = svg;
+    }
+
+    // ============================================
+    // Tabs (lazy-load iframes on first activation)
+    // ============================================
+    function setupTabs() {
+      const buttons = document.querySelectorAll('.tab-btn');
+      const panes = document.querySelectorAll('.tab-pane');
+      buttons.forEach(btn => {
+        btn.addEventListener('click', () => {
+          const target = btn.dataset.tab;
+          buttons.forEach(b => b.classList.toggle('active', b === btn));
+          panes.forEach(p => p.classList.toggle('active', p.id === `pane-${target}`));
+
+          // Lazy-load iframe src on first activation
+          const pane = document.getElementById(`pane-${target}`);
+          const iframe = pane && pane.querySelector('iframe[data-src]');
+          if (iframe && !iframe.src) {
+            iframe.src = iframe.dataset.src;
+          }
+        });
+      });
+    }
+
+    // ============================================
+    // Init & schedule
+    // ============================================
+    setBackground();
+    updateClock();
+    load3Day();
+    loadMSM();
+    setupTabs();
+
+    setInterval(updateClock, 10 * 1000);
+    setInterval(() => { load3Day(); loadMSM(); }, 30 * 60 * 1000);
+
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) {
+        updateClock();
+        load3Day();
+        loadMSM();
+      }
+    });
+  </script>
+</body>
+</html>
