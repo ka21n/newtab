@@ -377,7 +377,7 @@
 
         // Weather icon (centered both axes)
         const type = wmoWeatherType(codes[i]);
-        const iconX = cx - iconSize/2;
+        const iconX = cx - iconSize/2 - 28;  // 28pxぶん左に寄せる
         const iconY = yIconTop + (iconH - iconSize)/2;
         cells += `<g transform="translate(${iconX},${iconY}) scale(${iconScale})">${ICONS[type]}</g>`;
 
